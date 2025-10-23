@@ -1,0 +1,3725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 学习管理系统</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 侧边栏 */
+    .sidebar {
+      width: 300px;
+      background: white;
+      border-right: 1px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .sidebar-header h1 {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+
+    /* 统计面板 */
+    .stats-panel {
+      padding: 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .stats-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .stats-item:last-child {
+      border-bottom: none;
+    }
+
+    .stats-label {
+      color: #666;
+    }
+
+    .stats-value {
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .stats-value.warning {
+      color: #ffc107;
+    }
+
+    .stats-value.danger {
+      color: #dc3545;
+    }
+
+    .stats-value.success {
+      color: #28a745;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s;
+    }
+
+    .book-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .book-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      position: relative;
+    }
+
+    .book-item:hover {
+      background: #e9ecef;
+      transform: translateX(3px);
+    }
+
+    .book-item.active {
+      background: #e7f3ff;
+      border-left-color: #667eea;
+    }
+
+    .book-item-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+      padding-right: 30px;
+    }
+
+    .book-item-progress {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .book-item-deadline {
+      font-size: 11px;
+      margin-top: 5px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .book-item-deadline.danger {
+      background: #fff5f5;
+      color: #dc3545;
+      font-weight: 600;
+    }
+
+    .book-item-deadline.warning {
+      background: #fffef5;
+      color: #ffc107;
+      font-weight: 600;
+    }
+
+    .book-item-deadline.success {
+      background: #f0fff4;
+      color: #28a745;
+    }
+
+    .book-settings-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #ddd;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .book-item:hover .book-settings-btn {
+      opacity: 1;
+    }
+
+    .book-settings-btn:hover {
+      background: white;
+      transform: scale(1.1);
+    }
+
+    .add-book-btn {
+      margin: 15px;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .add-book-btn:hover {
+      background: #5568d3;
+    }
+
+    .add-book-btn[style*="background: #28a745"]:hover {
+      background: #218838 !important;
+    }
+
+    /* 主内容区 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .toolbar {
+      padding: 15px 20px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+
+    .btn-secondary {
+      background: #e9ecef;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #dee2e6;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn.active {
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      position: relative;
+    }
+
+    .content-text {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      line-height: 1.8;
+      white-space: pre-wrap;
+      font-size: 15px;
+      position: relative;
+    }
+
+    /* Markdown样式 */
+    .content-text h1 {
+      font-size: 28px;
+      margin: 20px 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .content-text h2 {
+      font-size: 24px;
+      margin: 18px 0 12px 0;
+      color: #667eea;
+    }
+
+    .content-text h3 {
+      font-size: 20px;
+      margin: 15px 0 10px 0;
+    }
+
+    .content-text ul, .content-text ol {
+      margin: 10px 0;
+      padding-left: 30px;
+    }
+
+    .content-text li {
+      margin: 5px 0;
+    }
+
+    .content-text code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    .content-text pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+
+    .content-text blockquote {
+      border-left: 4px solid #667eea;
+      padding-left: 15px;
+      margin: 10px 0;
+      color: #666;
+      font-style: italic;
+    }
+
+    .content-text table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 15px 0;
+      background: white;
+    }
+
+    .content-text table th,
+    .content-text table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .content-text table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .content-text table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .study-block table th,
+    .study-block table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+
+    .study-block table th {
+      background: rgba(255,255,255,0.7);
+    }
+
+    .text-line {
+      position: relative;
+      padding: 2px 0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .text-line.selecting:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .text-line.selected {
+      background: rgba(102, 126, 234, 0.2);
+      border: 2px dashed #667eea;
+    }
+
+    .study-block {
+      position: relative;
+      padding: 8px;
+      margin: 4px 0;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .study-block-info {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .study-block:hover .study-block-info {
+      opacity: 1;
+    }
+
+    .study-count {
+      background: rgba(255,255,255,0.9);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #667eea;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .study-plus-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .study-plus-btn:hover {
+      background: #218838;
+      transform: scale(1.1);
+    }
+
+    .study-delete-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .study-delete-btn:hover {
+      background: #c82333;
+      transform: scale(1.1);
+    }
+
+    .study-important-btn {
+      background: rgba(255,193,7,0.9);
+      color: white;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .study-important-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .study-important-btn.active {
+      background: #ffc107;
+    }
+
+    .study-block.important {
+      border: 3px solid #ffc107;
+      box-shadow: 0 0 10px rgba(255,193,7,0.3);
+    }
+
+    .study-block.important::before {
+      content: '⭐ 重点';
+      position: absolute;
+      top: -12px;
+      left: 10px;
+      background: #ffc107;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* 任务提醒面板 */
+    .task-panel {
+      width: 380px;
+      background: white;
+      border-left: 1px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s;
+    }
+
+    .task-panel-header {
+      padding: 15px 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .task-panel-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .task-tab {
+      flex: 1;
+      padding: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .task-tab:hover {
+      background: #f8f9fa;
+    }
+
+    .task-tab.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .task-panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-panel-title h3 {
+      font-size: 16px;
+    }
+
+    .task-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .task-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task-item:hover {
+      border-color: #667eea;
+      transform: translateX(-3px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    }
+
+    .task-item.urgent {
+      border-left: 3px solid #dc3545;
+      background: #fff5f5;
+    }
+
+    .task-item.due-soon {
+      border-left: 3px solid #ffc107;
+      background: #fffef5;
+    }
+
+    .task-item.normal {
+      border-left: 3px solid #28a745;
+    }
+
+    .task-item-book {
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .task-item-preview {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-item-meta {
+      font-size: 11px;
+      color: #999;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* 学习统计列表 */
+    .stats-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .stats-block-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stats-block-item:hover {
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    }
+
+    .stats-block-book {
+      font-weight: 600;
+      font-size: 13px;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .stats-block-content {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .stats-block-progress {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .stats-block-bar {
+      flex: 1;
+      height: 6px;
+      background: #e9ecef;
+      border-radius: 3px;
+      margin: 0 10px;
+      overflow: hidden;
+    }
+
+    .stats-block-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s;
+    }
+
+
+    /* 模态框 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .form-group textarea {
+      min-height: 200px;
+      font-family: monospace;
+      resize: vertical;
+    }
+
+    .form-group input[type="file"] {
+      padding: 8px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .info-box {
+      background: #e7f3ff;
+      border: 1px solid #667eea;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .info-box.warning {
+      background: #fff3cd;
+      border-color: #ffc107;
+      color: #856404;
+    }
+
+    .info-box.success {
+      background: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .info-box.danger {
+      background: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+    }
+
+    .format-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .format-tab {
+      padding: 6px 12px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .format-tab:hover {
+      background: #e9ecef;
+    }
+
+    .format-tab.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    /* 同步选项卡样式 */
+    .sync-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .sync-option-card {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      transition: all 0.2s;
+    }
+
+    .sync-option-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+
+    .sync-option-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .sync-option-icon {
+      font-size: 24px;
+    }
+
+    .sync-option-header h3 {
+      font-size: 16px;
+      margin: 0;
+      flex: 1;
+    }
+
+    .sync-option-badge {
+      background: #28a745;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .sync-option-badge.recommended {
+      background: #ffc107;
+      color: #333;
+    }
+
+    .sync-option-desc {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .sync-option-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .sync-option-actions .btn {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    /* 文件夹图标按钮 */
+    .folder-icon-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .folder-icon-btn:hover {
+      border-color: #667eea;
+      transform: scale(1.1);
+    }
+
+    .folder-icon-btn.selected {
+      border-color: #667eea;
+      background: #e7f3ff;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    /* 文件夹项样式 */
+    .folder-item {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #dee2e6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .folder-item:hover {
+      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+      transform: translateX(3px);
+    }
+
+    .folder-icon {
+      font-size: 18px;
+    }
+
+    .folder-name {
+      flex: 1;
+    }
+
+    .folder-count {
+      font-size: 11px;
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .folder-toggle {
+      font-size: 12px;
+      color: #666;
+      transition: transform 0.2s;
+    }
+
+    .folder-toggle.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .folder-settings-btn {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #ddd;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .folder-item:hover .folder-settings-btn {
+      opacity: 1;
+    }
+
+    .folder-settings-btn:hover {
+      background: white;
+      transform: scale(1.1);
+    }
+
+    .folder-books {
+      margin-left: 20px;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 968px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        transform: translateX(-100%);
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .task-panel {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        transform: translateX(100%);
+      }
+
+      .task-panel.show {
+        transform: translateX(0);
+      }
+
+      .mobile-toggle {
+        display: block !important;
+      }
+    }
+
+    .mobile-toggle {
+      display: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    /* 滚动条样式 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+/* 移动端关闭按钮 */
+.mobile-close-btn,
+.mobile-close-btn-task {
+  display: none;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-close-btn:hover,
+.mobile-close-btn-task:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+.mobile-close-btn-task {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+.mobile-close-btn-task:hover {
+  background: rgba(102, 126, 234, 0.3);
+}
+
+@media (max-width: 968px) {
+  .mobile-close-btn,
+  .mobile-close-btn-task {
+    display: block !important;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="sidebar">
+<div class="sidebar-header">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h1>📚 学习管理系统</h1>
+      <p style="font-size: 12px; opacity: 0.9;">智能复习 · 高效学习</p>
+    </div>
+    <button class="mobile-close-btn" onclick="app.toggleSidebar()" style="display: none;">✕</button>
+  </div>
+</div>
+
+
+      <!-- 全局统计面板 -->
+      <div class="stats-panel" id="statsPanel">
+        <div class="stats-item">
+          <span class="stats-label">📚 总书籍数</span>
+          <span class="stats-value" id="totalBooks">0</span>
+        </div>
+        <div class="stats-item">
+          <span class="stats-label">📝 总学习区块</span>
+          <span class="stats-value" id="totalBlocks">0</span>
+        </div>
+        <div class="stats-item">
+          <span class="stats-label">✅ 已学习区块</span>
+          <span class="stats-value" id="studiedBlocks">0</span>
+        </div>
+        <div class="stats-item">
+          <span class="stats-label">🎯 总目标次数</span>
+          <span class="stats-value" id="totalTargetStudies">0</span>
+        </div>
+        <div class="stats-item">
+          <span class="stats-label">📊 已完成次数</span>
+          <span class="stats-value" id="completedStudies">0</span>
+        </div>
+        <div class="stats-item">
+          <span class="stats-label">⏰ 平均学习速度</span>
+          <span class="stats-value" id="avgSpeed">-</span>
+        </div>
+        <div class="stats-item">
+          <span class="stats-label">🔥 完成概率</span>
+          <span class="stats-value" id="completionProb">-</span>
+        </div>
+        <div class="stats-item" style="flex-direction: column; align-items: stretch;">
+          <span class="stats-label" style="margin-bottom: 5px;">总体进度</span>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="overallProgress" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="book-list" id="bookList">
+        <div class="empty-state">
+          <div class="empty-state-icon">📖</div>
+          <p>还没有添加书籍</p>
+          <p style="font-size: 12px; margin-top: 5px;">点击下方按钮开始</p>
+        </div>
+      </div>
+      <button class="add-book-btn" onclick="app.showCreateFolderModal()" style="background: #ffc107; color: #333;">📁 创建文件夹</button>
+      <button class="add-book-btn" onclick="app.showAddBookModal()" style="margin-top: 8px;">+ 添加书籍</button>
+      <button class="add-book-btn" onclick="app.showBatchImportModal()" style="background: #28a745; margin-top: 8px;">📚 批量导入</button>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <div class="toolbar">
+        <button class="btn mobile-toggle btn-secondary" onclick="app.toggleSidebar()">☰ 菜单</button>
+        <button class="btn btn-secondary" id="selectModeBtn" onclick="app.toggleSelectMode()">✏️ 选择模式</button>
+        <div style="flex: 1"></div>
+        <button class="btn btn-secondary" onclick="app.showAnkiExportModal()">📇 导出Anki</button>
+        <button class="btn btn-secondary" onclick="app.showSyncModal()">🔄 同步数据</button>
+        <button class="btn mobile-toggle btn-secondary" onclick="app.toggleTaskPanel()">📋 任务</button>
+      </div>
+
+      <div class="content-area" id="contentArea">
+        <div class="content-text" id="contentText">
+          <div class="empty-state">
+            <div class="empty-state-icon">📄</div>
+            <p>请选择一本书籍开始学习</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 任务提醒面板 -->
+    <div class="task-panel" id="taskPanel">
+<div class="task-panel-header">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <h3 style="margin: 0;">任务面板</h3>
+    <button class="mobile-close-btn-task" onclick="app.toggleTaskPanel()">✕</button>
+  </div>
+  <div class="task-panel-tabs">
+    <div class="task-tab active" onclick="app.switchTaskTab('tasks')">📋 学习任务</div>
+    <div class="task-tab" onclick="app.switchTaskTab('stats')">📊 学习统计</div>
+  </div>
+  <div class="task-panel-title">
+    <h3 id="taskPanelTitle">学习任务</h3>
+    <span id="taskCount" style="color: #667eea; font-weight: 600;">0</span>
+  </div>
+</div>
+
+      
+      <!-- 任务列表 -->
+      <div class="task-list" id="taskList">
+        <div class="empty-state">
+          <div class="empty-state-icon">✅</div>
+          <p>暂无待学习任务</p>
+        </div>
+      </div>
+
+      <!-- 学习统计列表 -->
+      <div class="stats-list" id="statsList" style="display: none;">
+        <div class="empty-state">
+          <div class="empty-state-icon">📊</div>
+          <p>暂无学习记录</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加书籍模态框 -->
+  <div class="modal" id="addBookModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📖 添加新书籍</h2>
+      </div>
+      <div class="form-group">
+        <label>书籍名称</label>
+        <input type="text" id="bookName" placeholder="例如：民法上 第一章">
+      </div>
+
+      <div class="form-group">
+        <label>所属文件夹（可选）</label>
+        <select id="bookFolder">
+          <option value="">无（根目录）</option>
+        </select>
+        <div class="help-text">选择一个文件夹来组织书籍</div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>目标学习次数</label>
+          <input type="number" id="targetRounds" value="8" min="1">
+        </div>
+        <div class="form-group">
+          <label>截止日期</label>
+          <input type="date" id="deadlineDate">
+          <div class="help-text">选择完成学习的截止日期</div>
+        </div>
+      </div>
+
+      <div id="planPreview" class="info-box" style="display: none;">
+        <strong>📅 学习计划预览：</strong><br>
+        <span id="planPreviewText"></span>
+      </div>
+
+      <div class="form-group">
+        <label>内容格式</label>
+        <div class="format-tabs">
+          <div class="format-tab active" onclick="app.switchFormat('text')">📝 纯文本</div>
+          <div class="format-tab" onclick="app.switchFormat('markdown')">📄 Markdown</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>书籍内容</label>
+        <div style="margin-bottom: 10px;">
+          <input type="file" id="fileInput" accept=".txt,.md,.pdf" style="display: none;" onchange="app.handleFileUpload(event)">
+          <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📁 导入文件 (TXT/MD/PDF)</button>
+          <span id="fileName" style="margin-left: 10px; font-size: 12px; color: #666;"></span>
+        </div>
+        <textarea id="bookContent" placeholder="粘贴书籍内容，或点击上方按钮导入文件..."></textarea>
+        <div class="help-text" id="formatHint">支持纯文本格式</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.hideAddBookModal()">取消</button>
+        <button class="btn btn-primary" onclick="app.addBook()">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑书籍设置模态框 -->
+  <div class="modal" id="editBookModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚙️ 书籍设置</h2>
+      </div>
+      <div class="form-group">
+        <label>书籍名称</label>
+        <input type="text" id="editBookName">
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>目标学习次数</label>
+          <input type="number" id="editTargetRounds" min="1">
+        </div>
+        <div class="form-group">
+          <label>截止日期</label>
+          <input type="date" id="editDeadlineDate">
+        </div>
+      </div>
+
+      <div id="editPlanPreview" class="info-box" style="display: none;">
+        <strong>📅 学习计划预览：</strong><br>
+        <span id="editPlanPreviewText"></span>
+      </div>
+
+      <div id="editCurrentStats" class="info-box" style="display: none;">
+        <strong>📊 当前学习统计：</strong><br>
+        <span id="editCurrentStatsText"></span>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.showEditContentModal()">📝 编辑内容</button>
+        <button class="btn btn-danger" onclick="app.deleteBook()">🗑️ 删除书籍</button>
+        <div style="flex: 1"></div>
+        <button class="btn btn-secondary" onclick="app.hideEditBookModal()">取消</button>
+        <button class="btn btn-primary" onclick="app.saveBookSettings()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑书籍内容模态框 -->
+  <div class="modal" id="editContentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📝 编辑书籍内容</h2>
+        <p style="font-size: 13px; color: #666; margin-top: 5px;">
+          ⚠️ 修改内容后，现有的学习区块将被清除
+        </p>
+      </div>
+      
+      <div class="form-group">
+        <label>内容格式</label>
+        <div class="format-tabs">
+          <div class="format-tab active" id="editFormatText" onclick="app.switchEditFormat('text')">📝 纯文本</div>
+          <div class="format-tab" id="editFormatMarkdown" onclick="app.switchEditFormat('markdown')">📄 Markdown</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>书籍内容</label>
+        <textarea id="editBookContent" style="min-height: 400px;"></textarea>
+        <div class="help-text">
+          可以直接编辑、删除或添加新内容
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.hideEditContentModal()">取消</button>
+        <button class="btn btn-primary" onclick="app.saveBookContent()">保存内容</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 同步数据模态框 -->
+  <div class="modal" id="syncModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔄 跨设备同步</h2>
+        <p style="font-size: 13px; color: #666; margin-top: 5px;">
+          选择一种方式在多个设备间同步学习数据
+        </p>
+      </div>
+
+      <div class="sync-options">
+        <!-- 选项1: 剪贴板同步 -->
+        <div class="sync-option-card">
+          <div class="sync-option-header">
+            <span class="sync-option-icon">📋</span>
+            <h3>剪贴板同步</h3>
+            <span class="sync-option-badge recommended">推荐</span>
+          </div>
+          <p class="sync-option-desc">复制数据到剪贴板，在其他设备粘贴导入</p>
+          <div class="sync-option-actions">
+            <button class="btn btn-primary" onclick="app.copyToClipboard(true)">📋 复制压缩数据（推荐）</button>
+            <button class="btn btn-secondary" onclick="app.pasteFromClipboard()">📥 从剪贴板导入</button>
+          </div>
+          <div id="syncStats" class="help-text" style="margin-top: 8px;"></div>
+          <div class="help-text">💡 压缩后数据量减少70-80%，更容易分享</div>
+        </div>
+
+        <!-- 选项2: 二维码同步 -->
+        <div class="sync-option-card">
+          <div class="sync-option-header">
+            <span class="sync-option-icon">📱</span>
+            <h3>二维码同步</h3>
+          </div>
+          <p class="sync-option-desc">生成二维码，手机扫描即可导入</p>
+          <div class="sync-option-actions">
+            <button class="btn btn-primary" onclick="app.generateQRCode()">📱 生成二维码</button>
+          </div>
+          <div id="qrcodeContainer" style="display: none; text-align: center; margin-top: 15px;">
+            <div id="qrcodeImage"></div>
+            <div class="help-text" style="margin-top: 10px;">用手机扫描此二维码打开同步页面</div>
+          </div>
+          <div class="help-text">💡 最方便，手机扫码直接导入</div>
+        </div>
+
+        <!-- 选项3: 文件同步 -->
+        <div class="sync-option-card">
+          <div class="sync-option-header">
+            <span class="sync-option-icon">💾</span>
+            <h3>文件同步</h3>
+          </div>
+          <p class="sync-option-desc">下载备份文件，通过云盘或文件传输同步</p>
+          <div class="sync-option-actions">
+            <button class="btn btn-success" onclick="app.exportData()">💾 下载备份文件</button>
+            <button class="btn btn-secondary" onclick="app.showImportFileDialog()">📁 导入备份文件</button>
+          </div>
+          <div class="help-text">💡 适合定期备份，可保存到坚果云/网盘</div>
+        </div>
+
+        <!-- 选项4: 自动同步说明 -->
+        <div class="info-box">
+          <strong>🔔 同步建议：</strong><br>
+          <span id="syncRecommendation">
+            • 📋 数据量小（<10KB）：推荐剪贴板同步<br>
+            • 💾 数据量大（>10KB）：推荐文件同步<br>
+          </span>
+          <strong>使用方法：</strong><br>
+          1. 点击"复制压缩数据"<br>
+          2. 发送给自己（微信文件传输助手/QQ/邮件）<br>
+          3. 其他设备打开页面，点击"从剪贴板导入"<br>
+          4. 粘贴数据即可完成同步
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.hideSyncModal()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 创建文件夹模态框 -->
+  <div class="modal" id="createFolderModal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>📁 创建文件夹</h2>
+      </div>
+      <div class="form-group">
+        <label>文件夹名称</label>
+        <input type="text" id="folderName" placeholder="例如：考研资料、专业课、公共课">
+      </div>
+      <div class="form-group">
+        <label>文件夹图标（可选）</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('📁')">📁</button>
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('📚')">📚</button>
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('📖')">📖</button>
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('📝')">📝</button>
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('🎓')">🎓</button>
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('💼')">💼</button>
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('🔬')">🔬</button>
+          <button class="folder-icon-btn" onclick="app.selectFolderIcon('⚖️')">⚖️</button>
+        </div>
+        <input type="hidden" id="folderIcon" value="📁">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.hideCreateFolderModal()">取消</button>
+        <button class="btn btn-primary" onclick="app.createFolder()">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量导入书籍模态框 -->
+  <div class="modal" id="batchImportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📚 批量导入书籍</h2>
+        <p style="font-size: 13px; color: #666; margin-top: 5px;">
+          一次性导入多个文件（支持TXT/MD/PDF）
+        </p>
+      </div>
+
+      <div class="info-box">
+        <strong>💡 使用提示：</strong><br>
+        • 支持同时选择多个文件（按住Ctrl/Cmd多选）<br>
+        • 支持的格式：.txt、.md、.pdf<br>
+        • 文件名将自动作为书籍名称<br>
+        • 可以统一设置学习目标和截止日期
+      </div>
+
+      <div class="form-group">
+        <label>导入到文件夹（可选）</label>
+        <select id="batchFolder">
+          <option value="">无（根目录）</option>
+        </select>
+        <div class="help-text">所有书籍将导入到此文件夹</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>目标学习次数（统一设置）</label>
+          <input type="number" id="batchTargetRounds" value="8" min="1">
+        </div>
+        <div class="form-group">
+          <label>截止日期（统一设置）</label>
+          <input type="date" id="batchDeadlineDate">
+        </div>
+      </div>
+
+      <div id="batchPlanPreview" class="info-box" style="display: none;">
+        <strong>📅 学习计划预览：</strong><br>
+        <span id="batchPlanPreviewText"></span>
+      </div>
+
+      <div class="form-group">
+        <label>选择文件</label>
+        <input type="file" id="batchFileInput" accept=".txt,.md,.pdf" multiple style="padding: 8px;">
+        <div class="help-text">按住Ctrl/Cmd可选择多个文件</div>
+      </div>
+
+      <div id="batchFileList" style="display: none; margin-top: 15px;">
+        <label style="display: block; margin-bottom: 10px; font-weight: 600;">已选择的文件：</label>
+        <div id="batchFileListContent" style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+        </div>
+      </div>
+
+      <div id="batchImportProgress" style="display: none; margin-top: 15px;">
+        <div class="info-box">
+          <strong>📊 导入进度：</strong><br>
+          <div id="batchProgressText" style="margin-top: 8px;"></div>
+          <div class="progress-bar-container" style="margin-top: 10px;">
+            <div class="progress-bar" id="batchProgressBar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.hideBatchImportModal()">取消</button>
+        <button class="btn btn-primary" id="batchImportBtn" onclick="app.processBatchImport()">开始导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导出Anki卡片模态框 -->
+  <div class="modal" id="ankiExportModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>📇 导出Anki卡片</h2>
+        <p style="font-size: 13px; color: #666; margin-top: 5px;">
+          将学习区块导出为Anki可导入的txt格式
+        </p>
+      </div>
+
+      <div class="info-box">
+        <strong>💡 使用说明：</strong><br>
+        1. 选择导出范围和卡片类型<br>
+        2. 点击"生成Anki卡片"下载txt文件<br>
+        3. 在Anki中：文件 → 导入 → 选择下载的txt文件<br>
+        4. 设置分隔符为"制表符(Tab)"<br>
+        5. 完成导入
+      </div>
+
+      <div class="form-group">
+        <label>选择书籍</label>
+        <select id="ankiBookSelect">
+          <option value="current">当前书籍</option>
+          <option value="all">所有书籍</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>导出范围</label>
+        <select id="ankiRangeSelect">
+          <option value="all">所有学习区块</option>
+          <option value="important">仅重点区块（⭐标记）</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>卡片类型</label>
+        <select id="ankiCardType">
+          <option value="basic">基础卡片（正面/背面）</option>
+          <option value="cloze">填空卡片</option>
+        </select>
+        <div class="help-text" id="ankiCardTypeHint">
+          基础卡片：书籍名+内容第一行 → 完整区块内容
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="ankiIncludeTags" checked style="width: auto; margin-right: 5px;">
+          包含标签（书籍名、学习次数）
+        </label>
+      </div>
+
+      <div id="ankiPreview" class="info-box" style="display: none; margin-top: 15px;">
+        <strong>📊 预览：</strong><br>
+        <span id="ankiPreviewText"></span>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.hideAnkiExportModal()">取消</button>
+        <button class="btn btn-primary" onclick="app.exportAnkiCards()">📇 生成Anki卡片</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 隐藏的文件输入 -->
+  <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="app.handleImportFile(event)">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+  <script>
+    // 配置 PDF.js
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // 配置 marked
+    if (typeof marked !== 'undefined') {
+      marked.setOptions({
+        gfm: true, // 启用GitHub风格的Markdown
+        breaks: true, // 将单个换行符转换为<br>
+        tables: true // 启用表格支持
+      });
+    }
+
+    const app = {
+      data: {
+        books: [],
+        folders: [],
+        currentBookId: null,
+        studyStats: {
+          totalStudyTime: 0,
+          studyHistory: []
+        }
+      },
+      state: {
+        selectMode: false,
+        selectedLines: [],
+        editingBookId: null,
+        currentFormat: 'text',
+        editFormat: 'text',
+        currentTaskTab: 'tasks',
+        collapsedFolders: new Set()
+      },
+      colors: [
+        '#FFE5E5', '#E5F5FF', '#FFF5E5', 
+        '#E5FFE5', '#F5E5FF', '#FFE5F5',
+        '#FFF0E5', '#E5FFFF', '#F0FFE5'
+      ],
+
+      init() {
+        this.loadData();
+        this.renderBookList();
+        this.updateGlobalStats();
+        this.updateTaskList();
+        this.setupEventListeners();
+        
+        // 检查URL参数中是否有导入数据
+        this.checkUrlImport();
+        
+        setInterval(() => {
+          this.updateTaskList();
+          this.updateGlobalStats();
+        }, 60000);
+
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 30);
+        document.getElementById('deadlineDate').valueAsDate = defaultDate;
+      },
+
+      checkUrlImport() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const importData = urlParams.get('import');
+        
+        if (importData) {
+          try {
+            const dataStr = atob(decodeURIComponent(importData));
+            if (confirm('检测到同步数据，是否导入？')) {
+              this.importDataFromString(dataStr);
+              // 清除URL参数
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          } catch (error) {
+            console.error('URL导入失败:', error);
+          }
+        }
+      },
+
+      setupEventListeners() {
+        ['targetRounds', 'deadlineDate'].forEach(id => {
+          document.getElementById(id)?.addEventListener('input', () => this.updatePlanPreview());
+        });
+
+        ['editTargetRounds', 'editDeadlineDate'].forEach(id => {
+          document.getElementById(id)?.addEventListener('input', () => this.updateEditPlanPreview());
+        });
+
+        // 批量导入事件监听
+        ['batchTargetRounds', 'batchDeadlineDate'].forEach(id => {
+          document.getElementById(id)?.addEventListener('input', () => this.updateBatchPlanPreview());
+        });
+
+        document.getElementById('batchFileInput')?.addEventListener('change', (e) => this.handleBatchFileSelection(e));
+
+        // Anki导出事件监听
+        ['ankiBookSelect', 'ankiRangeSelect', 'ankiCardType'].forEach(id => {
+          document.getElementById(id)?.addEventListener('change', () => this.updateAnkiPreview());
+        });
+      },
+
+      loadData() {
+        const saved = localStorage.getItem('studySystemData');
+        if (saved) {
+          this.data = JSON.parse(saved);
+          if (!this.data.studyStats) {
+            this.data.studyStats = {
+              totalStudyTime: 0,
+              studyHistory: []
+            };
+          }
+          if (!this.data.folders) {
+            this.data.folders = [];
+          }
+          this.data.books.forEach(book => {
+            if (!book.blocks) book.blocks = [];
+            if (!book.format) book.format = 'text';
+            if (!book.folderId) book.folderId = null;
+          });
+        }
+      },
+
+      saveData() {
+        localStorage.setItem('studySystemData', JSON.stringify(this.data));
+      },
+
+      // ========== 格式切换功能 ==========
+      switchFormat(format) {
+        this.state.currentFormat = format;
+        document.querySelectorAll('.format-tabs .format-tab').forEach(tab => {
+          tab.classList.remove('active');
+        });
+        
+        // 通过格式名称找到对应的标签页并激活
+        const tabs = document.querySelectorAll('.format-tabs .format-tab');
+        tabs.forEach(tab => {
+          if ((format === 'markdown' && tab.textContent.includes('Markdown')) ||
+              (format === 'text' && tab.textContent.includes('纯文本'))) {
+            tab.classList.add('active');
+          }
+        });
+        
+        if (format === 'markdown') {
+          document.getElementById('formatHint').textContent = '支持Markdown格式（标题、列表、代码块等）';
+        } else {
+          document.getElementById('formatHint').textContent = '支持纯文本格式';
+        }
+      },
+
+      switchEditFormat(format) {
+        this.state.editFormat = format;
+        document.getElementById('editFormatText').classList.remove('active');
+        document.getElementById('editFormatMarkdown').classList.remove('active');
+        
+        if (format === 'markdown') {
+          document.getElementById('editFormatMarkdown').classList.add('active');
+        } else {
+          document.getElementById('editFormatText').classList.add('active');
+        }
+      },
+
+      // ========== 文件导入功能 ==========
+      async handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        document.getElementById('fileName').textContent = `已选择: ${file.name}`;
+        
+        try {
+          let content = '';
+          const fileType = file.name.split('.').pop().toLowerCase();
+
+          if (fileType === 'pdf') {
+            content = await this.extractPDFText(file);
+            this.switchFormat('text');
+          } else if (fileType === 'md') {
+            content = await this.readTextFile(file);
+            this.switchFormat('markdown');
+          } else {
+            content = await this.readTextFile(file);
+            this.switchFormat('text');
+          }
+
+          document.getElementById('bookContent').value = content;
+          
+          if (!document.getElementById('bookName').value) {
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+            document.getElementById('bookName').value = nameWithoutExt;
+          }
+        } catch (error) {
+          alert('❌ 文件读取失败: ' + error.message);
+        }
+      },
+
+      readTextFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            let text = e.target.result;
+            // 清理可能的BOM标记
+            text = text.replace(/^\uFEFF/, '');
+            resolve(text);
+          };
+          reader.onerror = (e) => reject(new Error('文件读取失败'));
+          reader.readAsText(file, 'UTF-8');
+        });
+      },
+
+      async extractPDFText(file) {
+        if (typeof pdfjsLib === 'undefined') {
+          throw new Error('PDF解析库未加载，请刷新页面重试');
+        }
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n\n';
+        }
+
+        return fullText.trim();
+      },
+
+      // ========== 全局统计功能 ==========
+      updateGlobalStats() {
+        const stats = this.calculateGlobalStats();
+        
+        document.getElementById('totalBooks').textContent = stats.totalBooks;
+        document.getElementById('totalBlocks').textContent = stats.totalBlocks;
+        document.getElementById('studiedBlocks').textContent = stats.studiedBlocks;
+        document.getElementById('totalTargetStudies').textContent = stats.totalTargetStudies;
+        document.getElementById('completedStudies').textContent = stats.completedStudies;
+        
+        const speedEl = document.getElementById('avgSpeed');
+        if (stats.avgStudiesPerDay > 0) {
+          speedEl.textContent = `${stats.avgStudiesPerDay.toFixed(1)}次/天`;
+          speedEl.className = 'stats-value success';
+        } else {
+          speedEl.textContent = '暂无数据';
+          speedEl.className = 'stats-value';
+        }
+
+        const probEl = document.getElementById('completionProb');
+        if (stats.completionProbability !== null) {
+          const prob = stats.completionProbability;
+          probEl.textContent = `${prob.toFixed(0)}%`;
+          if (prob >= 80) {
+            probEl.className = 'stats-value success';
+          } else if (prob >= 50) {
+            probEl.className = 'stats-value warning';
+          } else {
+            probEl.className = 'stats-value danger';
+          }
+        } else {
+          probEl.textContent = '暂无目标';
+          probEl.className = 'stats-value';
+        }
+
+        const progressPercent = stats.totalTargetStudies > 0 
+          ? (stats.completedStudies / stats.totalTargetStudies * 100) 
+          : 0;
+        document.getElementById('overallProgress').style.width = `${Math.min(progressPercent, 100)}%`;
+      },
+
+      calculateGlobalStats() {
+        const books = this.data.books;
+        const now = Date.now();
+        
+        let totalBooks = books.length;
+        let totalBlocks = 0;
+        let studiedBlocks = 0;
+        let totalTargetStudies = 0;
+        let completedStudies = 0;
+        let totalRemainingStudies = 0;
+        let minDeadline = null;
+        
+        books.forEach(book => {
+          totalBlocks += book.blocks.length;
+          
+          book.blocks.forEach(block => {
+            if (block.studyRecords && block.studyRecords.length > 0) {
+              studiedBlocks++;
+              completedStudies += block.studyRecords.length;
+            }
+            
+            if (book.targetRounds) {
+              totalTargetStudies += book.targetRounds;
+              const remaining = Math.max(0, book.targetRounds - (block.studyRecords?.length || 0));
+              totalRemainingStudies += remaining;
+            }
+          });
+
+          if (book.deadline) {
+            if (!minDeadline || book.deadline < minDeadline) {
+              minDeadline = book.deadline;
+            }
+          }
+        });
+
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+        let recentStudies = 0;
+        
+        books.forEach(book => {
+          book.blocks.forEach(block => {
+            if (block.studyRecords) {
+              recentStudies += block.studyRecords.filter(r => r.timestamp > sevenDaysAgo).length;
+            }
+          });
+        });
+        
+        const avgStudiesPerDay = recentStudies / 7;
+
+        let completionProbability = null;
+        if (minDeadline && totalRemainingStudies > 0 && avgStudiesPerDay > 0) {
+          const daysLeft = Math.max(0, (minDeadline - now) / (1000 * 60 * 60 * 24));
+          const projectedStudies = avgStudiesPerDay * daysLeft;
+          completionProbability = Math.min(100, (projectedStudies / totalRemainingStudies) * 100);
+        } else if (totalRemainingStudies === 0) {
+          completionProbability = 100;
+        }
+
+        return {
+          totalBooks,
+          totalBlocks,
+          studiedBlocks,
+          totalTargetStudies,
+          completedStudies,
+          avgStudiesPerDay,
+          completionProbability,
+          totalRemainingStudies,
+          daysLeft: minDeadline ? Math.max(0, (minDeadline - now) / (1000 * 60 * 60 * 24)) : null
+        };
+      },
+
+      // ========== 文件夹管理功能 ==========
+      showCreateFolderModal() {
+        document.getElementById('createFolderModal').classList.add('show');
+        document.getElementById('folderName').value = '';
+        document.getElementById('folderIcon').value = '📁';
+        // 重置选中状态
+        document.querySelectorAll('.folder-icon-btn').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+        document.querySelector('.folder-icon-btn').classList.add('selected');
+      },
+
+      hideCreateFolderModal() {
+        document.getElementById('createFolderModal').classList.remove('show');
+      },
+
+      selectFolderIcon(icon) {
+        document.getElementById('folderIcon').value = icon;
+        document.querySelectorAll('.folder-icon-btn').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+        event.target.classList.add('selected');
+      },
+
+      createFolder() {
+        const name = document.getElementById('folderName').value.trim();
+        const icon = document.getElementById('folderIcon').value;
+
+        if (!name) {
+          alert('请输入文件夹名称');
+          return;
+        }
+
+        const newFolder = {
+          id: 'folder_' + Date.now(),
+          name: name,
+          icon: icon,
+          createdAt: Date.now()
+        };
+
+        this.data.folders.push(newFolder);
+        this.saveData();
+        this.hideCreateFolderModal();
+        this.renderBookList();
+        alert('✅ 文件夹创建成功！');
+      },
+
+      deleteFolder(folderId) {
+        const folder = this.data.folders.find(f => f.id === folderId);
+        if (!folder) return;
+
+        const booksInFolder = this.data.books.filter(b => b.folderId === folderId);
+        
+        let message = `确定要删除文件夹"${folder.name}"吗？`;
+        if (booksInFolder.length > 0) {
+          message += `\n\n文件夹中有 ${booksInFolder.length} 本书籍，它们将被移动到根目录。`;
+        }
+
+        if (!confirm(message)) {
+          return;
+        }
+
+        // 将文件夹中的书籍移到根目录
+        booksInFolder.forEach(book => {
+          book.folderId = null;
+        });
+
+        // 删除文件夹
+        const index = this.data.folders.findIndex(f => f.id === folderId);
+        if (index > -1) {
+          this.data.folders.splice(index, 1);
+        }
+
+        this.saveData();
+        this.renderBookList();
+        alert('✅ 文件夹已删除');
+      },
+
+      toggleFolder(folderId) {
+        if (this.state.collapsedFolders.has(folderId)) {
+          this.state.collapsedFolders.delete(folderId);
+        } else {
+          this.state.collapsedFolders.add(folderId);
+        }
+        this.renderBookList();
+      },
+
+      movBookToFolder(bookId, folderId) {
+        const book = this.data.books.find(b => b.id === bookId);
+        if (!book) return;
+
+        book.folderId = folderId || null;
+        this.saveData();
+        this.renderBookList();
+      },
+
+      updateFolderSelects() {
+        // 更新所有文件夹选择下拉框
+        const folderOptions = this.data.folders.map(folder => 
+          `<option value="${folder.id}">${folder.icon} ${folder.name}</option>`
+        ).join('');
+
+        ['bookFolder', 'batchFolder'].forEach(id => {
+          const select = document.getElementById(id);
+          if (select) {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">无（根目录）</option>' + folderOptions;
+            select.value = currentValue;
+          }
+        });
+      },
+
+      // ========== 书籍管理功能 ==========
+      showAddBookModal() {
+        document.getElementById('addBookModal').classList.add('show');
+        document.getElementById('bookName').value = '';
+        document.getElementById('bookContent').value = '';
+        document.getElementById('targetRounds').value = '8';
+        document.getElementById('fileName').textContent = '';
+        document.getElementById('fileInput').value = '';
+        
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 50);
+        document.getElementById('deadlineDate').valueAsDate = defaultDate;
+        
+        this.state.currentFormat = 'text';
+        this.updateFolderSelects();
+        this.updatePlanPreview();
+      },
+
+      hideAddBookModal() {
+        document.getElementById('addBookModal').classList.remove('show');
+      },
+
+      updatePlanPreview() {
+        const rounds = parseInt(document.getElementById('targetRounds').value) || 8;
+        const deadlineInput = document.getElementById('deadlineDate').value;
+        
+        if (!deadlineInput) {
+          document.getElementById('planPreview').style.display = 'none';
+          return;
+        }
+
+        const deadline = new Date(deadlineInput).getTime();
+        const now = Date.now();
+        const days = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        
+        if (days <= 0) {
+          document.getElementById('planPreview').className = 'info-box danger';
+          document.getElementById('planPreviewText').innerHTML = 
+            '⚠️ 截止日期已过期，请选择未来的日期';
+          document.getElementById('planPreview').style.display = 'block';
+          return;
+        }
+
+        const avgInterval = (days / rounds).toFixed(1);
+        
+        let className = 'info-box';
+        let message = `将在 <strong>${days}天</strong> 内完成 <strong>${rounds}次</strong> 学习<br>`;
+        message += `平均每 <strong>${avgInterval}天</strong> 学习一次<br>`;
+        message += `截止日期：<strong>${new Date(deadline).toLocaleDateString('zh-CN')}</strong>`;
+        
+        if (parseFloat(avgInterval) < 2) {
+          className = 'info-box warning';
+          message += '<br>⚠️ 学习节奏较紧张，建议适当调整';
+        } else if (parseFloat(avgInterval) > 10) {
+          className = 'info-box success';
+          message += '<br>✅ 学习节奏宽松，可以从容安排';
+        } else {
+          className = 'info-box';
+          message += '<br>✅ 学习节奏适中';
+        }
+
+        document.getElementById('planPreview').className = className;
+        document.getElementById('planPreviewText').innerHTML = message;
+        document.getElementById('planPreview').style.display = 'block';
+      },
+
+      addBook() {
+        const name = document.getElementById('bookName').value.trim();
+        const content = document.getElementById('bookContent').value.trim();
+        const targetRounds = parseInt(document.getElementById('targetRounds').value) || 8;
+        const deadlineInput = document.getElementById('deadlineDate').value;
+        const folderId = document.getElementById('bookFolder').value || null;
+
+        if (!name) {
+          alert('请输入书籍名称');
+          return;
+        }
+
+        if (!content) {
+          alert('请输入书籍内容');
+          return;
+        }
+
+        if (!deadlineInput) {
+          alert('请选择截止日期');
+          return;
+        }
+
+        const deadline = new Date(deadlineInput).getTime();
+        const now = Date.now();
+
+        if (deadline <= now) {
+          alert('截止日期必须是未来的日期');
+          return;
+        }
+
+        const newBook = {
+          id: 'book_' + Date.now(),
+          name: name,
+          content: content,
+          format: this.state.currentFormat,
+          targetRounds: targetRounds,
+          deadline: deadline,
+          folderId: folderId,
+          blocks: [],
+          createdAt: now
+        };
+
+        this.data.books.push(newBook);
+        this.saveData();
+        this.hideAddBookModal();
+        this.renderBookList();
+        this.updateGlobalStats();
+        this.selectBook(newBook.id);
+
+        alert('✅ 书籍添加成功！');
+      },
+      showEditBookModal(bookId) {
+        this.state.editingBookId = bookId;
+        const book = this.data.books.find(b => b.id === bookId);
+        if (!book) return;
+
+        document.getElementById('editBookName').value = book.name;
+        document.getElementById('editTargetRounds').value = book.targetRounds || 8;
+        
+        if (book.deadline) {
+          const deadlineDate = new Date(book.deadline);
+          document.getElementById('editDeadlineDate').valueAsDate = deadlineDate;
+        }
+
+        const stats = this.calculateBookStats(book);
+        const statsText = `
+          📝 总区块数: ${stats.totalBlocks}<br>
+          ✅ 已学习区块: ${stats.studiedBlocks}<br>
+          📊 总学习次数: ${stats.totalStudies}<br>
+          🎯 目标总次数: ${stats.totalBlocks * book.targetRounds}<br>
+          📈 完成进度: ${stats.totalBlocks > 0 ? Math.round((stats.totalStudies / (stats.totalBlocks * book.targetRounds)) * 100) : 0}%
+        `;
+        
+        document.getElementById('editCurrentStatsText').innerHTML = statsText;
+        document.getElementById('editCurrentStats').style.display = 'block';
+        
+        this.updateEditPlanPreview();
+        document.getElementById('editBookModal').classList.add('show');
+      },
+
+      hideEditBookModal() {
+        document.getElementById('editBookModal').classList.remove('show');
+        this.state.editingBookId = null;
+      },
+
+      updateEditPlanPreview() {
+        const book = this.data.books.find(b => b.id === this.state.editingBookId);
+        if (!book) return;
+
+        const rounds = parseInt(document.getElementById('editTargetRounds').value) || 8;
+        const deadlineInput = document.getElementById('editDeadlineDate').value;
+        
+        if (!deadlineInput) {
+          document.getElementById('editPlanPreview').style.display = 'none';
+          return;
+        }
+
+        const deadline = new Date(deadlineInput).getTime();
+        const now = Date.now();
+        const days = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        
+        if (days <= 0) {
+          document.getElementById('editPlanPreview').className = 'info-box danger';
+          document.getElementById('editPlanPreviewText').innerHTML = 
+            '⚠️ 截止日期已过期，请选择未来的日期';
+          document.getElementById('editPlanPreview').style.display = 'block';
+          return;
+        }
+
+        const stats = this.calculateBookStats(book);
+        const remainingStudies = Math.max(0, (book.blocks.length * rounds) - stats.totalStudies);
+        
+        if (remainingStudies === 0) {
+          document.getElementById('editPlanPreview').className = 'info-box success';
+          document.getElementById('editPlanPreviewText').innerHTML = 
+            '🎉 已完成所有学习目标！';
+          document.getElementById('editPlanPreview').style.display = 'block';
+          return;
+        }
+
+        const requiredSpeed = remainingStudies / days;
+        const avgInterval = (days / remainingStudies).toFixed(1);
+        
+        let className = 'info-box';
+        let message = `剩余 <strong>${days}天</strong>，需完成 <strong>${remainingStudies}次</strong> 学习<br>`;
+        message += `需要速度：<strong>${requiredSpeed.toFixed(1)}次/天</strong><br>`;
+        message += `平均间隔：<strong>${avgInterval}天</strong> 学习一次<br>`;
+        
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+        let recentStudies = 0;
+        book.blocks.forEach(block => {
+          if (block.studyRecords) {
+            recentStudies += block.studyRecords.filter(r => r.timestamp > sevenDaysAgo).length;
+          }
+        });
+        const currentSpeed = recentStudies / 7;
+        
+        if (currentSpeed > 0) {
+          message += `当前速度：<strong>${currentSpeed.toFixed(1)}次/天</strong><br>`;
+          
+          if (currentSpeed >= requiredSpeed) {
+            className = 'info-box success';
+            message += '✅ 当前速度良好，按此进度可按时完成';
+          } else {
+            const speedUpPercent = ((requiredSpeed / currentSpeed - 1) * 100).toFixed(0);
+            className = 'info-box warning';
+            message += `⚡ 需要提速 <strong>${speedUpPercent}%</strong> 才能按时完成`;
+          }
+        }
+
+        document.getElementById('editPlanPreview').className = className;
+        document.getElementById('editPlanPreviewText').innerHTML = message;
+        document.getElementById('editPlanPreview').style.display = 'block';
+      },
+
+      calculateBookStats(book) {
+        const totalBlocks = book.blocks.length;
+        let studiedBlocks = 0;
+        let totalStudies = 0;
+        let remainingStudies = 0;
+
+        book.blocks.forEach(block => {
+          const studyCount = block.studyRecords?.length || 0;
+          if (studyCount > 0) {
+            studiedBlocks++;
+          }
+          totalStudies += studyCount;
+          remainingStudies += Math.max(0, book.targetRounds - studyCount);
+        });
+
+        const now = Date.now();
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+        let recentStudies = 0;
+        
+        book.blocks.forEach(block => {
+          if (block.studyRecords) {
+            recentStudies += block.studyRecords.filter(r => r.timestamp > sevenDaysAgo).length;
+          }
+        });
+        
+        const currentSpeed = recentStudies / 7;
+        const daysLeft = book.deadline ? Math.max(0, (book.deadline - now) / (1000 * 60 * 60 * 24)) : 0;
+        const requiredSpeed = daysLeft > 0 ? remainingStudies / daysLeft : 0;
+
+        return {
+          totalBlocks,
+          studiedBlocks,
+          totalStudies,
+          remainingStudies,
+          currentSpeed,
+          requiredSpeed
+        };
+      },
+
+      saveBookSettings() {
+        const book = this.data.books.find(b => b.id === this.state.editingBookId);
+        if (!book) return;
+
+        const name = document.getElementById('editBookName').value.trim();
+        const targetRounds = parseInt(document.getElementById('editTargetRounds').value);
+        const deadlineInput = document.getElementById('editDeadlineDate').value;
+
+        if (!name) {
+          alert('请输入书籍名称');
+          return;
+        }
+
+        if (!deadlineInput) {
+          alert('请选择截止日期');
+          return;
+        }
+
+        const deadline = new Date(deadlineInput).getTime();
+        const now = Date.now();
+
+        if (deadline <= now) {
+          alert('截止日期必须是未来的日期');
+          return;
+        }
+
+        book.name = name;
+        book.targetRounds = targetRounds;
+        book.deadline = deadline;
+
+        this.saveData();
+        this.hideEditBookModal();
+        this.renderBookList();
+        this.updateGlobalStats();
+        
+        if (this.data.currentBookId === book.id) {
+          this.renderBookContent();
+        }
+
+        alert('✅ 设置已保存！');
+      },
+
+      deleteBook() {
+        if (!confirm('确定要删除这本书籍吗？所有学习记录将被清除！')) {
+          return;
+        }
+
+        const index = this.data.books.findIndex(b => b.id === this.state.editingBookId);
+        if (index > -1) {
+          this.data.books.splice(index, 1);
+          
+          if (this.data.currentBookId === this.state.editingBookId) {
+            this.data.currentBookId = null;
+          }
+
+          this.saveData();
+          this.hideEditBookModal();
+          this.renderBookList();
+          this.updateGlobalStats();
+          this.renderBookContent();
+          this.updateTaskList();
+
+          alert('✅ 书籍已删除');
+        }
+      },
+
+      // ========== 编辑书籍内容功能 ==========
+      showEditContentModal() {
+        const book = this.data.books.find(b => b.id === this.state.editingBookId);
+        if (!book) return;
+
+        // 只隐藏编辑设置模态框，但保留 editingBookId
+        document.getElementById('editBookModal').classList.remove('show');
+        
+        document.getElementById('editBookContent').value = book.content;
+        this.state.editFormat = book.format || 'text';
+        
+        if (this.state.editFormat === 'markdown') {
+          document.getElementById('editFormatMarkdown').classList.add('active');
+          document.getElementById('editFormatText').classList.remove('active');
+        } else {
+          document.getElementById('editFormatText').classList.add('active');
+          document.getElementById('editFormatMarkdown').classList.remove('active');
+        }
+        
+        document.getElementById('editContentModal').classList.add('show');
+      },
+
+      hideEditContentModal() {
+        document.getElementById('editContentModal').classList.remove('show');
+      },
+
+      saveBookContent() {
+        const book = this.data.books.find(b => b.id === this.state.editingBookId);
+        if (!book) return;
+
+        const newContent = document.getElementById('editBookContent').value.trim();
+        
+        if (!newContent) {
+          alert('内容不能为空');
+          return;
+        }
+
+        const oldLines = book.content.split('\n');
+        const newLines = newContent.split('\n');
+        const hasBlocks = book.blocks && book.blocks.length > 0;
+        
+        if (hasBlocks) {
+          // 智能保留：检查每个学习区块的内容是否改变
+          const originalBlockCount = book.blocks.length;
+          const validBlocks = [];
+          const removedBlocks = [];
+          
+          book.blocks.forEach(block => {
+            // 检查学习区块的行号是否还有效
+            if (block.endLine >= newLines.length) {
+              removedBlocks.push(block);
+              return;
+            }
+            
+            // 检查学习区块的内容是否完全一致
+            let contentMatch = true;
+            for (let i = block.startLine; i <= block.endLine && i < Math.min(oldLines.length, newLines.length); i++) {
+              if (oldLines[i] !== newLines[i]) {
+                contentMatch = false;
+                break;
+              }
+            }
+            
+            if (contentMatch && block.endLine < newLines.length) {
+              validBlocks.push(block);
+            } else {
+              removedBlocks.push(block);
+            }
+          });
+          
+          const removedCount = removedBlocks.length;
+          const keptCount = validBlocks.length;
+          
+          let message = `📝 智能检测结果：\n\n`;
+          message += `• 原有学习区块：${originalBlockCount} 个\n`;
+          message += `• 保留（未改动）：${keptCount} 个\n`;
+          message += `• 清除（已改动）：${removedCount} 个\n\n`;
+          
+          if (removedCount > 0) {
+            const totalStudies = removedBlocks.reduce((sum, b) => sum + (b.studyRecords?.length || 0), 0);
+            message += `⚠️ ${removedCount} 个改动区块的学习记录（共${totalStudies}次）将被清除\n\n`;
+          }
+          
+          message += `确定要保存修改吗？`;
+          
+          if (!confirm(message)) {
+            return;
+          }
+          
+          // 应用智能保留
+          book.blocks = validBlocks;
+        }
+
+        book.content = newContent;
+        book.format = this.state.editFormat;
+
+        this.saveData();
+        this.hideEditContentModal();
+        
+        if (this.data.currentBookId === book.id) {
+          this.renderBookContent();
+        }
+        
+        this.updateGlobalStats();
+        this.updateTaskList();
+
+        if (hasBlocks) {
+          const keptCount = book.blocks.length;
+          if (keptCount > 0) {
+            alert(`✅ 内容已更新！\n\n智能保留了 ${keptCount} 个未改动的学习区块。`);
+          } else {
+            alert('✅ 内容已更新！\n\n所有学习区块都被改动，已全部清除。');
+          }
+        } else {
+          alert('✅ 内容已更新！');
+        }
+      },
+
+      renderBookList() {
+        const container = document.getElementById('bookList');
+        if (this.data.books.length === 0 && this.data.folders.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📖</div>
+              <p>还没有添加书籍</p>
+              <p style="font-size: 12px; margin-top: 5px;">点击下方按钮开始</p>
+            </div>
+          `;
+          return;
+        }
+
+        const now = Date.now();
+        let html = '';
+
+        // 渲染文件夹
+        this.data.folders.forEach(folder => {
+          const booksInFolder = this.data.books.filter(b => b.folderId === folder.id);
+          const isCollapsed = this.state.collapsedFolders.has(folder.id);
+          const toggleIcon = isCollapsed ? '▶' : '▼';
+
+          html += `
+            <div class="folder-item" onclick="app.toggleFolder('${folder.id}')">
+              <span class="folder-toggle ${isCollapsed ? 'collapsed' : ''}">${toggleIcon}</span>
+              <span class="folder-icon">${folder.icon}</span>
+              <span class="folder-name">${this.escapeHtml(folder.name)}</span>
+              <span class="folder-count">${booksInFolder.length}</span>
+              <button class="folder-settings-btn" onclick="event.stopPropagation(); app.deleteFolder('${folder.id}')">🗑️</button>
+            </div>
+          `;
+
+          // 渲染文件夹中的书籍
+          if (!isCollapsed && booksInFolder.length > 0) {
+            html += '<div class="folder-books">';
+            html += booksInFolder.map(book => this.renderBookItem(book, now)).join('');
+            html += '</div>';
+          }
+        });
+
+        // 渲染根目录的书籍
+        const rootBooks = this.data.books.filter(b => !b.folderId);
+        html += rootBooks.map(book => this.renderBookItem(book, now)).join('');
+
+        container.innerHTML = html;
+      },
+
+      renderBookItem(book, now) {
+        const stats = this.calculateBookStats(book);
+        const progress = stats.totalBlocks > 0 
+          ? Math.round((stats.totalStudies / (stats.totalBlocks * book.targetRounds)) * 100) 
+          : 0;
+        
+        let deadlineInfo = '';
+        let deadlineClass = '';
+        
+        if (book.deadline) {
+          const daysLeft = Math.ceil((book.deadline - now) / (1000 * 60 * 60 * 24));
+          
+          if (daysLeft < 0) {
+            deadlineInfo = `⚠️ 已超期 ${Math.abs(daysLeft)} 天`;
+            deadlineClass = 'danger';
+          } else if (stats.remainingStudies > 0) {
+            const onTrack = stats.currentSpeed >= stats.requiredSpeed;
+            
+            if (daysLeft <= 7) {
+              deadlineClass = 'danger';
+              deadlineInfo = `🔥 剩余${daysLeft}天 | 需${stats.requiredSpeed.toFixed(1)}次/天`;
+            } else if (!onTrack && stats.currentSpeed > 0) {
+              deadlineClass = 'warning';
+              const speedUp = ((stats.requiredSpeed / stats.currentSpeed - 1) * 100).toFixed(0);
+              deadlineInfo = `⚡ 剩余${daysLeft}天 | 需提速${speedUp}%`;
+            } else {
+              deadlineClass = 'success';
+              deadlineInfo = `✅ 剩余${daysLeft}天 | 进度良好`;
+            }
+          } else {
+            deadlineClass = 'success';
+            deadlineInfo = `🎉 已完成目标！`;
+          }
+        }
+        
+        return `
+          <div class="book-item ${book.id === this.data.currentBookId ? 'active' : ''}" 
+               onclick="app.selectBook('${book.id}')">
+            <button class="book-settings-btn" onclick="event.stopPropagation(); app.showEditBookModal('${book.id}')">⚙️</button>
+            <div class="book-item-name">${this.escapeHtml(book.name)}</div>
+            <div class="book-item-progress">
+              📊 进度: ${stats.totalStudies}/${stats.totalBlocks * book.targetRounds} (${progress}%)<br>
+              📝 区块: ${stats.studiedBlocks}/${stats.totalBlocks}<br>
+              🎯 目标: ${book.targetRounds}次/区块
+            </div>
+            ${deadlineInfo ? `<div class="book-item-deadline ${deadlineClass}">${deadlineInfo}</div>` : ''}
+          </div>
+        `;
+      },
+
+      selectBook(bookId) {
+        this.data.currentBookId = bookId;
+        this.saveData();
+        this.renderBookList();
+        this.renderBookContent();
+        this.updateTaskList();
+        this.updateStatsList();
+      },
+
+      // ========== 内容渲染功能 ==========
+renderBookContent() {
+  const book = this.data.books.find(b => b.id === this.data.currentBookId);
+  if (!book) {
+    document.getElementById('contentText').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📄</div>
+        <p>请选择一本书籍开始学习</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  const lines = book.content.split('\n');
+  let lineIndex = 0;
+
+  // 统一处理：无论是 Markdown 还是纯文本，都按行处理
+  while (lineIndex < lines.length) {
+    const block = book.blocks.find(b => b.startLine === lineIndex);
+    
+    if (block) {
+      const color = this.getBlockColor(book.id, block.id);
+      const studyCount = block.studyRecords?.length || 0;
+      const blockLines = lines.slice(block.startLine, block.endLine + 1);
+      const isImportant = block.important || false;
+      const importantClass = isImportant ? 'important' : '';
+      const importantBtnClass = isImportant ? 'active' : '';
+      
+      html += `
+        <div class="study-block ${importantClass}" style="background-color: ${color};" data-block-id="${block.id}">
+          <div class="study-block-info">
+            <span class="study-count">已学${studyCount}次</span>
+            <button class="study-important-btn ${importantBtnClass}" onclick="app.toggleImportant('${block.id}')" title="标记为重点">⭐</button>
+            <button class="study-plus-btn" onclick="app.studyBlock('${block.id}')" title="学习+1">+</button>
+            <button class="study-delete-btn" onclick="app.deleteBlock('${block.id}')" title="删除区块">×</button>
+          </div>
+          ${this.renderBlockContent(blockLines, book)}
+        </div>
+      `;
+      lineIndex = block.endLine + 1;
+    } else {
+      html += this.renderLine(lines[lineIndex], book, lineIndex);
+      lineIndex++;
+    }
+  }
+
+  document.getElementById('contentText').innerHTML = html;
+},
+
+// 新增：渲染区块内容（支持 Markdown）
+renderBlockContent(lines, book) {
+  const content = lines.join('\n');
+  
+  if (book.format === 'markdown' && typeof marked !== 'undefined') {
+    return marked.parse(content);
+  } else {
+    return lines.map(line => {
+      const lineHtml = this.escapeHtml(line);
+      return `<div class="text-line">${lineHtml}</div>`;
+    }).join('');
+  }
+},
+
+renderLine(line, book, lineIndex) {
+  let content = '';
+  
+  // Markdown 格式：渲染单行
+  if (book.format === 'markdown' && typeof marked !== 'undefined') {
+    content = marked.parseInline(line) || '&nbsp;'; // 空行显示空格
+  } else {
+    content = this.escapeHtml(line) || '&nbsp;';
+  }
+  
+  const dataAttr = lineIndex !== undefined ? `data-line="${lineIndex}"` : '';
+  
+  return `<div class="text-line" ${dataAttr}>${content}</div>`;
+},
+
+      getBlockColor(bookId, blockId) {
+        const seed = bookId.charCodeAt(0) + blockId.charCodeAt(0);
+        return this.colors[seed % this.colors.length];
+      },
+
+      // ========== 选择模式功能 ==========
+      toggleSelectMode() {
+        this.state.selectMode = !this.state.selectMode;
+        
+        const btn = document.getElementById('selectModeBtn');
+        
+        if (this.state.selectMode) {
+          btn.classList.add('active');
+          this.enableSelectMode();
+        } else {
+          btn.classList.remove('active');
+          this.disableSelectMode();
+        }
+      },
+
+      enableSelectMode() {
+        const lines = document.querySelectorAll('.text-line:not(.study-block .text-line)');
+        lines.forEach(line => {
+          line.classList.add('selecting');
+          line.onclick = (e) => this.toggleLineSelection(e.target);
+        });
+      },
+
+      disableSelectMode() {
+        const lines = document.querySelectorAll('.text-line');
+        lines.forEach(line => {
+          line.classList.remove('selecting', 'selected');
+          line.onclick = null;
+        });
+        this.state.selectedLines = [];
+      },
+
+      toggleLineSelection(lineElement) {
+        if (!this.state.selectMode) return;
+        
+        const lineIndex = parseInt(lineElement.dataset.line);
+        if (isNaN(lineIndex)) return;
+
+        if (lineElement.classList.contains('selected')) {
+          lineElement.classList.remove('selected');
+          this.state.selectedLines = this.state.selectedLines.filter(l => l !== lineIndex);
+        } else {
+          lineElement.classList.add('selected');
+          this.state.selectedLines.push(lineIndex);
+        }
+
+        if (this.state.selectedLines.length > 0) {
+          this.showCreateBlockButton();
+        } else {
+          this.hideCreateBlockButton();
+        }
+      },
+
+      showCreateBlockButton() {
+        let btn = document.getElementById('createBlockBtn');
+        if (!btn) {
+          btn = document.createElement('button');
+          btn.id = 'createBlockBtn';
+          btn.className = 'btn btn-success';
+          btn.style.position = 'fixed';
+          btn.style.bottom = '30px';
+          btn.style.right = '30px';
+          btn.style.zIndex = '999';
+          btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+          btn.textContent = `✅ 创建学习区块 (${this.state.selectedLines.length}行)`;
+          btn.onclick = () => this.createStudyBlock();
+          document.body.appendChild(btn);
+        } else {
+          btn.textContent = `✅ 创建学习区块 (${this.state.selectedLines.length}行)`;
+        }
+      },
+
+      hideCreateBlockButton() {
+        const btn = document.getElementById('createBlockBtn');
+        if (btn) {
+          btn.remove();
+        }
+      },
+
+      createStudyBlock() {
+        if (this.state.selectedLines.length === 0) return;
+
+        const book = this.data.books.find(b => b.id === this.data.currentBookId);
+        if (!book) return;
+
+        this.state.selectedLines.sort((a, b) => a - b);
+        const startLine = this.state.selectedLines[0];
+        const endLine = this.state.selectedLines[this.state.selectedLines.length - 1];
+
+        const overlap = book.blocks.some(block => {
+          return !(endLine < block.startLine || startLine > block.endLine);
+        });
+
+        if (overlap) {
+          alert('❌ 所选区域与现有学习区块重叠，请重新选择');
+          return;
+        }
+
+        const newBlock = {
+          id: 'block_' + Date.now(),
+          startLine: startLine,
+          endLine: endLine,
+          studyRecords: [],
+          createdAt: Date.now()
+        };
+
+        book.blocks.push(newBlock);
+        book.blocks.sort((a, b) => a.startLine - b.startLine);
+
+        this.saveData();
+        this.toggleSelectMode();
+        this.renderBookContent();
+        this.updateGlobalStats();
+        this.updateTaskList();
+        this.updateStatsList();
+
+        alert('✅ 学习区块创建成功！');
+      },
+
+      studyBlock(blockId) {
+        const book = this.data.books.find(b => b.id === this.data.currentBookId);
+        if (!book) return;
+
+        const block = book.blocks.find(b => b.id === blockId);
+        if (!block) return;
+
+        if (!block.studyRecords) {
+          block.studyRecords = [];
+        }
+
+        block.studyRecords.push({
+          timestamp: Date.now()
+        });
+
+        this.data.studyStats.studyHistory.push({
+          bookId: book.id,
+          blockId: block.id,
+          timestamp: Date.now()
+        });
+
+        this.saveData();
+        this.renderBookContent();
+        this.updateGlobalStats();
+        this.updateTaskList();
+        this.updateStatsList();
+
+        const studyCount = block.studyRecords.length;
+        const remaining = Math.max(0, book.targetRounds - studyCount);
+        
+        if (remaining === 0) {
+          alert(`🎉 恭喜！此区块已完成目标学习次数！`);
+        } else {
+          alert(`✅ 学习记录已添加！\n当前: ${studyCount}次\n剩余: ${remaining}次`);
+        }
+      },
+
+      deleteBlock(blockId) {
+        const book = this.data.books.find(b => b.id === this.data.currentBookId);
+        if (!book) return;
+
+        const block = book.blocks.find(b => b.id === blockId);
+        if (!block) return;
+
+        const studyCount = block.studyRecords?.length || 0;
+        if (!confirm(`确定要删除这个学习区块吗？\n已学习 ${studyCount} 次的记录将被清除。`)) {
+          return;
+        }
+
+        const index = book.blocks.findIndex(b => b.id === blockId);
+        if (index > -1) {
+          book.blocks.splice(index, 1);
+          this.saveData();
+          this.renderBookContent();
+          this.updateGlobalStats();
+          this.updateTaskList();
+          this.updateStatsList();
+          alert('✅ 学习区块已删除');
+        }
+      },
+
+      toggleImportant(blockId) {
+        const book = this.data.books.find(b => b.id === this.data.currentBookId);
+        if (!book) return;
+
+        const block = book.blocks.find(b => b.id === blockId);
+        if (!block) return;
+
+        block.important = !block.important;
+        this.saveData();
+        this.renderBookContent();
+      },
+
+
+      // ========== 任务面板功能 ==========
+      switchTaskTab(tab) {
+        this.state.currentTaskTab = tab;
+        
+        document.querySelectorAll('.task-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (tab === 'tasks') {
+          document.getElementById('taskList').style.display = 'block';
+          document.getElementById('statsList').style.display = 'none';
+          document.getElementById('taskPanelTitle').textContent = '学习任务';
+          this.updateTaskList();
+        } else {
+          document.getElementById('taskList').style.display = 'none';
+          document.getElementById('statsList').style.display = 'block';
+          document.getElementById('taskPanelTitle').textContent = '学习统计';
+          this.updateStatsList();
+        }
+      },
+
+      updateTaskList() {
+        const container = document.getElementById('taskList');
+        const tasks = this.generateTaskList();
+
+        if (tasks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">✅</div>
+              <p>暂无待学习任务</p>
+            </div>
+          `;
+          document.getElementById('taskCount').textContent = '0';
+          return;
+        }
+
+        document.getElementById('taskCount').textContent = tasks.length;
+
+        container.innerHTML = tasks.map(task => {
+          const preview = task.content.substring(0, 50) + (task.content.length > 50 ? '...' : '');
+          return `
+            <div class="task-item ${task.urgency}" onclick="app.jumpToTask('${task.bookId}', '${task.blockId}')">
+              <div class="task-item-book">${this.escapeHtml(task.bookName)}</div>
+              <div class="task-item-preview">${this.escapeHtml(preview)}</div>
+              <div class="task-item-meta">
+                <span>已学${task.studyCount}/${task.targetRounds}次</span>
+                <span>${task.daysLeftText}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      },
+
+      generateTaskList() {
+        const now = Date.now();
+        const tasks = [];
+
+        this.data.books.forEach(book => {
+          if (!book.deadline) return;
+
+          const daysLeft = Math.ceil((book.deadline - now) / (1000 * 60 * 60 * 24));
+          
+          book.blocks.forEach(block => {
+            const studyCount = block.studyRecords?.length || 0;
+            const remaining = book.targetRounds - studyCount;
+            
+            if (remaining <= 0) return;
+
+            const requiredInterval = daysLeft / remaining;
+            const lastStudy = block.studyRecords?.length > 0 
+              ? block.studyRecords[block.studyRecords.length - 1].timestamp 
+              : book.createdAt;
+            const daysSinceLastStudy = (now - lastStudy) / (1000 * 60 * 60 * 24);
+
+            let urgency = 'normal';
+            if (daysLeft <= 3 || daysSinceLastStudy >= requiredInterval * 1.5) {
+              urgency = 'urgent';
+            } else if (daysLeft <= 7 || daysSinceLastStudy >= requiredInterval) {
+              urgency = 'due-soon';
+            }
+
+            const lines = book.content.split('\n');
+            const content = lines.slice(block.startLine, block.endLine + 1).join(' ');
+
+            tasks.push({
+              bookId: book.id,
+              blockId: block.id,
+              bookName: book.name,
+              content: content,
+              studyCount: studyCount,
+              targetRounds: book.targetRounds,
+              daysLeft: daysLeft,
+              daysLeftText: daysLeft > 0 ? `剩${daysLeft}天` : '已超期',
+              urgency: urgency,
+              daysSinceLastStudy: daysSinceLastStudy
+            });
+          });
+        });
+
+        tasks.sort((a, b) => {
+          const urgencyOrder = { urgent: 0, 'due-soon': 1, normal: 2 };
+          if (urgencyOrder[a.urgency] !== urgencyOrder[b.urgency]) {
+            return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+          }
+          return b.daysSinceLastStudy - a.daysSinceLastStudy;
+        });
+
+        return tasks;
+      },
+
+      updateStatsList() {
+        const container = document.getElementById('statsList');
+        const allBlocks = [];
+
+        this.data.books.forEach(book => {
+          book.blocks.forEach(block => {
+            const lines = book.content.split('\n');
+            const content = lines.slice(block.startLine, block.endLine + 1).join(' ');
+            const studyCount = block.studyRecords?.length || 0;
+            
+            allBlocks.push({
+              bookId: book.id,
+              blockId: block.id,
+              bookName: book.name,
+              content: content,
+              studyCount: studyCount,
+              targetRounds: book.targetRounds,
+              progress: book.targetRounds > 0 ? (studyCount / book.targetRounds * 100) : 0
+            });
+          });
+        });
+
+        if (allBlocks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📊</div>
+              <p>暂无学习记录</p>
+            </div>
+          `;
+          document.getElementById('taskCount').textContent = '0';
+          return;
+        }
+
+        allBlocks.sort((a, b) => b.studyCount - a.studyCount);
+
+        document.getElementById('taskCount').textContent = allBlocks.length;
+
+        container.innerHTML = allBlocks.map(block => {
+          const preview = block.content.substring(0, 60) + (block.content.length > 60 ? '...' : '');
+          return `
+            <div class="stats-block-item" onclick="app.jumpToTask('${block.bookId}', '${block.blockId}')">
+              <div class="stats-block-book">${this.escapeHtml(block.bookName)}</div>
+              <div class="stats-block-content">${this.escapeHtml(preview)}</div>
+              <div class="stats-block-progress">
+                <span>${block.studyCount}次</span>
+                <div class="stats-block-bar">
+                  <div class="stats-block-bar-fill" style="width: ${Math.min(block.progress, 100)}%"></div>
+                </div>
+                <span>${block.studyCount}/${block.targetRounds}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      },
+
+      jumpToTask(bookId, blockId) {
+        if (this.data.currentBookId !== bookId) {
+          this.selectBook(bookId);
+        }
+
+        setTimeout(() => {
+          const blockElement = document.querySelector(`[data-block-id="${blockId}"]`);
+          if (blockElement) {
+            blockElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            blockElement.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.5)';
+            setTimeout(() => {
+              blockElement.style.boxShadow = '';
+            }, 2000);
+          }
+        }, 300);
+      },
+      // ========== 数据导入导出功能 ==========
+      exportData() {
+        const dataStr = JSON.stringify(this.data, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+        a.download = `学习进度_${dateStr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        alert('✅ 学习进度已导出！');
+      },
+
+      // ========== 同步功能 ==========
+      showSyncModal() {
+        document.getElementById('syncModal').classList.add('show');
+        document.getElementById('qrcodeContainer').style.display = 'none';
+        
+        // 显示当前数据大小
+        const dataStr = JSON.stringify(this.data);
+        const originalSize = new Blob([dataStr]).size;
+        
+        let compressedSize = originalSize;
+        if (typeof LZString !== 'undefined') {
+          const compressed = LZString.compressToBase64(dataStr);
+          compressedSize = new Blob([compressed]).size;
+        }
+        
+        const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+        
+        document.getElementById('syncStats').innerHTML = 
+          `📊 当前数据：原始 ${(originalSize/1024).toFixed(1)}KB，压缩后 ${(compressedSize/1024).toFixed(1)}KB（减少${compressionRatio}%）`;
+        
+        // 根据数据大小更新建议
+        const compressedKB = compressedSize / 1024;
+        let recommendation = '';
+        if (compressedKB < 10) {
+          recommendation = `✅ 数据量较小（${compressedKB.toFixed(1)}KB），推荐使用剪贴板同步<br>可直接通过微信/QQ发送`;
+        } else if (compressedKB < 50) {
+          recommendation = `⚠️ 数据量适中（${compressedKB.toFixed(1)}KB），建议使用：<br>• 剪贴板同步（可能需要分段发送）<br>• 或文件同步（更稳定）`;
+        } else {
+          recommendation = `❌ 数据量较大（${compressedKB.toFixed(1)}KB），强烈建议使用文件同步<br>避免通过即时通讯软件发送`;
+        }
+        document.getElementById('syncRecommendation').innerHTML = recommendation;
+      },
+
+      hideSyncModal() {
+        document.getElementById('syncModal').classList.remove('show');
+      },
+
+      async copyToClipboard(compress = true) {
+        const dataStr = JSON.stringify(this.data);
+        const originalSize = new Blob([dataStr]).size;
+        
+        let finalData = dataStr;
+        let compressedSize = originalSize;
+        
+        if (compress && typeof LZString !== 'undefined') {
+          // 使用压缩
+          finalData = 'COMPRESSED:' + LZString.compressToBase64(dataStr);
+          compressedSize = new Blob([finalData]).size;
+        }
+        
+        const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+        
+        try {
+          await navigator.clipboard.writeText(finalData);
+          
+          const sizeInfo = compress 
+            ? `\n📊 原始大小: ${(originalSize/1024).toFixed(1)}KB\n📦 压缩后: ${(compressedSize/1024).toFixed(1)}KB\n✨ 减少: ${compressionRatio}%`
+            : `\n📊 数据大小: ${(originalSize/1024).toFixed(1)}KB`;
+          
+          alert(`✅ 数据已复制到剪贴板！${sizeInfo}\n\n现在你可以：\n1. 发送给自己（微信/QQ/邮件）\n2. 在其他设备打开此页面\n3. 点击"从剪贴板导入"`);
+          
+          // 显示统计信息
+          if (compress) {
+            document.getElementById('syncStats').innerHTML = 
+              `✅ 已压缩：${(originalSize/1024).toFixed(1)}KB → ${(compressedSize/1024).toFixed(1)}KB（减少${compressionRatio}%）`;
+          }
+        } catch (error) {
+          // 降级方案：使用传统的复制方法
+          const textarea = document.createElement('textarea');
+          textarea.value = finalData;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          
+          try {
+            document.execCommand('copy');
+            alert(`✅ 数据已复制到剪贴板！\n📊 数据大小: ${(compressedSize/1024).toFixed(1)}KB`);
+          } catch (err) {
+            alert('❌ 复制失败，请尝试下载文件方式同步');
+          }
+          
+          document.body.removeChild(textarea);
+        }
+      },
+
+      async pasteFromClipboard() {
+        try {
+          const dataStr = await navigator.clipboard.readText();
+          
+          if (!dataStr || !dataStr.trim()) {
+            alert('剪贴板为空，请先复制数据');
+            return;
+          }
+
+          this.importDataFromString(dataStr);
+        } catch (error) {
+          // 如果无法读取剪贴板，提示用户手动粘贴
+          const dataStr = prompt('请粘贴数据：');
+          if (dataStr) {
+            this.importDataFromString(dataStr);
+          }
+        }
+      },
+
+      importDataFromString(dataStr) {
+        try {
+          let jsonStr = dataStr;
+          let isCompressed = false;
+          
+          // 检查是否是压缩数据
+          if (dataStr.startsWith('COMPRESSED:')) {
+            if (typeof LZString === 'undefined') {
+              throw new Error('压缩库未加载，请刷新页面重试');
+            }
+            try {
+              jsonStr = LZString.decompressFromBase64(dataStr.substring(11));
+              isCompressed = true;
+              if (!jsonStr) {
+                throw new Error('解压缩失败');
+              }
+            } catch (e) {
+              throw new Error('解压缩失败，数据可能已损坏');
+            }
+          }
+          
+          const importedData = JSON.parse(jsonStr);
+          
+          if (!importedData.books || !Array.isArray(importedData.books)) {
+            throw new Error('数据格式不正确');
+          }
+
+          const totalBlocks = importedData.books.reduce((sum, b) => sum + (b.blocks?.length || 0), 0);
+          const totalStudies = importedData.books.reduce((sum, b) => 
+            sum + (b.blocks?.reduce((s, block) => s + (block.studyRecords?.length || 0), 0) || 0), 0);
+          
+          const stats = `即将导入：\n📚 ${importedData.books.length} 本书籍\n📝 ${totalBlocks} 个学习区块\n✅ ${totalStudies} 次学习记录${isCompressed ? '\n📦 已解压缩数据' : ''}`;
+          
+          if (!confirm(`${stats}\n\n⚠️ 导入数据将覆盖当前所有数据，确定要继续吗？`)) {
+            return;
+          }
+
+          this.data = importedData;
+          
+          if (!this.data.studyStats) {
+            this.data.studyStats = {
+              totalStudyTime: 0,
+              studyHistory: []
+            };
+          }
+
+          this.data.books.forEach(book => {
+            if (!book.blocks) book.blocks = [];
+            if (!book.format) book.format = 'text';
+          });
+
+          this.saveData();
+          this.hideSyncModal();
+          this.renderBookList();
+          this.updateGlobalStats();
+          this.renderBookContent();
+          this.updateTaskList();
+
+          alert('✅ 数据导入成功！');
+        } catch (error) {
+          alert('❌ 导入失败：' + error.message + '\n\n请确保粘贴的是正确的数据');
+        }
+      },
+
+      generateQRCode() {
+        const dataStr = JSON.stringify(this.data);
+        
+        // 检查数据大小
+        const dataSize = new Blob([dataStr]).size;
+        const maxSize = 2000; // 二维码大小限制约2KB
+        
+        if (dataSize > maxSize) {
+          alert(`⚠️ 数据量较大（${(dataSize/1024).toFixed(1)}KB），二维码可能无法使用\n\n建议使用：\n1. 剪贴板同步（推荐）\n2. 文件同步`);
+          return;
+        }
+
+        // 创建一个包含数据的URL
+        const pageUrl = window.location.href.split('?')[0];
+        const syncUrl = `${pageUrl}?import=${encodeURIComponent(btoa(dataStr))}`;
+        
+        const container = document.getElementById('qrcodeContainer');
+        const qrDiv = document.getElementById('qrcodeImage');
+        qrDiv.innerHTML = '';
+        
+        // 使用在线二维码生成服务
+        const qrImg = document.createElement('img');
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(syncUrl)}`;
+        qrImg.style.maxWidth = '100%';
+        qrImg.onerror = () => {
+          qrDiv.innerHTML = '<p style="color: red;">二维码生成失败，请使用其他同步方式</p>';
+        };
+        qrDiv.appendChild(qrImg);
+        
+        container.style.display = 'block';
+      },
+
+      showImportFileDialog() {
+        document.getElementById('importFileInput').click();
+      },
+
+      async handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+          const dataStr = await this.readTextFile(file);
+          this.importDataFromString(dataStr);
+          // 清空文件输入
+          event.target.value = '';
+        } catch (error) {
+          alert('❌ 文件读取失败: ' + error.message);
+        }
+      },
+
+      // ========== 批量导入功能 ==========
+      showBatchImportModal() {
+        document.getElementById('batchImportModal').classList.add('show');
+        document.getElementById('batchFileInput').value = '';
+        document.getElementById('batchFileList').style.display = 'none';
+        document.getElementById('batchImportProgress').style.display = 'none';
+        document.getElementById('batchTargetRounds').value = '8';
+        
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 50);
+        document.getElementById('batchDeadlineDate').valueAsDate = defaultDate;
+        
+        this.updateFolderSelects();
+        this.updateBatchPlanPreview();
+      },
+
+      hideBatchImportModal() {
+        document.getElementById('batchImportModal').classList.remove('show');
+      },
+
+      handleBatchFileSelection(event) {
+        const files = Array.from(event.target.files);
+        
+        if (files.length === 0) {
+          document.getElementById('batchFileList').style.display = 'none';
+          return;
+        }
+
+        const listContent = files.map((file, index) => {
+          const fileType = file.name.split('.').pop().toLowerCase();
+          const icon = fileType === 'pdf' ? '📕' : fileType === 'md' ? '📘' : '📄';
+          const size = (file.size / 1024).toFixed(1);
+          return `
+            <div style="padding: 8px; margin-bottom: 5px; background: white; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+              <span>${icon} ${file.name}</span>
+              <span style="color: #666; font-size: 12px;">${size}KB</span>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('batchFileListContent').innerHTML = listContent;
+        document.getElementById('batchFileList').style.display = 'block';
+        
+        document.getElementById('batchImportBtn').textContent = `开始导入（${files.length}个文件）`;
+      },
+
+      updateBatchPlanPreview() {
+        const rounds = parseInt(document.getElementById('batchTargetRounds').value) || 8;
+        const deadlineInput = document.getElementById('batchDeadlineDate').value;
+        
+        if (!deadlineInput) {
+          document.getElementById('batchPlanPreview').style.display = 'none';
+          return;
+        }
+
+        const deadline = new Date(deadlineInput).getTime();
+        const now = Date.now();
+        const days = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        
+        if (days <= 0) {
+          document.getElementById('batchPlanPreview').className = 'info-box danger';
+          document.getElementById('batchPlanPreviewText').innerHTML = 
+            '⚠️ 截止日期已过期，请选择未来的日期';
+          document.getElementById('batchPlanPreview').style.display = 'block';
+          return;
+        }
+
+        const avgInterval = (days / rounds).toFixed(1);
+        
+        let className = 'info-box';
+        let message = `所有书籍将在 <strong>${days}天</strong> 内各完成 <strong>${rounds}次</strong> 学习<br>`;
+        message += `平均每 <strong>${avgInterval}天</strong> 学习一次<br>`;
+        message += `截止日期：<strong>${new Date(deadline).toLocaleDateString('zh-CN')}</strong>`;
+        
+        if (parseFloat(avgInterval) < 2) {
+          className = 'info-box warning';
+          message += '<br>⚠️ 学习节奏较紧张，建议适当调整';
+        } else if (parseFloat(avgInterval) > 10) {
+          className = 'info-box success';
+          message += '<br>✅ 学习节奏宽松，可以从容安排';
+        } else {
+          className = 'info-box';
+          message += '<br>✅ 学习节奏适中';
+        }
+
+        document.getElementById('batchPlanPreview').className = className;
+        document.getElementById('batchPlanPreviewText').innerHTML = message;
+        document.getElementById('batchPlanPreview').style.display = 'block';
+      },
+
+      async processBatchImport() {
+        const files = Array.from(document.getElementById('batchFileInput').files);
+        
+        if (files.length === 0) {
+          alert('请先选择文件');
+          return;
+        }
+
+        const targetRounds = parseInt(document.getElementById('batchTargetRounds').value) || 8;
+        const deadlineInput = document.getElementById('batchDeadlineDate').value;
+        const folderId = document.getElementById('batchFolder').value || null;
+
+        if (!deadlineInput) {
+          alert('请选择截止日期');
+          return;
+        }
+
+        const deadline = new Date(deadlineInput).getTime();
+        const now = Date.now();
+
+        if (deadline <= now) {
+          alert('截止日期必须是未来的日期');
+          return;
+        }
+
+        // 显示进度条
+        document.getElementById('batchImportProgress').style.display = 'block';
+        document.getElementById('batchImportBtn').disabled = true;
+        document.getElementById('batchImportBtn').style.opacity = '0.5';
+
+        let successCount = 0;
+        let failCount = 0;
+        const failedFiles = [];
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const progress = ((i + 1) / files.length * 100).toFixed(0);
+          
+          document.getElementById('batchProgressText').innerHTML = 
+            `正在导入：${file.name}<br>进度：${i + 1}/${files.length}`;
+          document.getElementById('batchProgressBar').style.width = `${progress}%`;
+
+          try {
+            const content = await this.readFileContent(file);
+            const fileType = file.name.split('.').pop().toLowerCase();
+            const format = fileType === 'md' ? 'markdown' : 'text';
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+
+            const newBook = {
+              id: 'book_' + Date.now() + '_' + i,
+              name: nameWithoutExt,
+              content: content,
+              format: format,
+              targetRounds: targetRounds,
+              deadline: deadline,
+              folderId: folderId,
+              blocks: [],
+              createdAt: now
+            };
+
+            this.data.books.push(newBook);
+            successCount++;
+            
+            // 小延迟，让用户看到进度
+            await new Promise(resolve => setTimeout(resolve, 100));
+          } catch (error) {
+            failCount++;
+            failedFiles.push(file.name);
+            console.error(`导入失败: ${file.name}`, error);
+          }
+        }
+
+        // 保存数据
+        this.saveData();
+        this.renderBookList();
+        this.updateGlobalStats();
+
+        // 完成提示
+        let message = `✅ 批量导入完成！\n\n成功：${successCount}个\n失败：${failCount}个`;
+        if (failedFiles.length > 0) {
+          message += `\n\n失败的文件：\n${failedFiles.join('\n')}`;
+        }
+
+        alert(message);
+
+        // 重置界面
+        document.getElementById('batchImportBtn').disabled = false;
+        document.getElementById('batchImportBtn').style.opacity = '1';
+        
+        if (successCount > 0) {
+          this.hideBatchImportModal();
+        } else {
+          document.getElementById('batchImportProgress').style.display = 'none';
+        }
+      },
+
+      async readFileContent(file) {
+        const fileType = file.name.split('.').pop().toLowerCase();
+        
+        if (fileType === 'pdf') {
+          return await this.extractPDFText(file);
+        } else {
+          return await this.readTextFile(file);
+        }
+      },
+
+      // ========== Anki导出功能 ==========
+      showAnkiExportModal() {
+        document.getElementById('ankiExportModal').classList.add('show');
+        
+        // 检查是否有当前书籍
+        const hasCurrentBook = this.data.currentBookId !== null;
+        const bookSelect = document.getElementById('ankiBookSelect');
+        if (!hasCurrentBook) {
+          bookSelect.value = 'all';
+          bookSelect.querySelector('option[value="current"]').disabled = true;
+        } else {
+          bookSelect.querySelector('option[value="current"]').disabled = false;
+        }
+        
+        this.updateAnkiPreview();
+      },
+
+      hideAnkiExportModal() {
+        document.getElementById('ankiExportModal').classList.remove('show');
+      },
+
+      updateAnkiPreview() {
+        const bookSelect = document.getElementById('ankiBookSelect').value;
+        const rangeSelect = document.getElementById('ankiRangeSelect').value;
+        const cardType = document.getElementById('ankiCardType').value;
+        
+        // 更新卡片类型提示
+        const hint = document.getElementById('ankiCardTypeHint');
+        if (cardType === 'basic') {
+          hint.textContent = '基础卡片：书籍名+内容第一行 → 完整区块内容';
+        } else {
+          hint.textContent = '填空卡片：将区块内容制作成填空题（需要手动标记{{c1::}}）';
+        }
+        
+        // 获取要导出的区块
+        const blocks = this.getAnkiExportBlocks();
+        
+        if (blocks.length === 0) {
+          document.getElementById('ankiPreview').style.display = 'none';
+          return;
+        }
+        
+        // 统计信息
+        const bookCount = new Set(blocks.map(b => b.bookId)).size;
+        const importantCount = blocks.filter(b => b.important).length;
+        
+        let previewText = `将导出 <strong>${blocks.length}</strong> 个学习区块<br>`;
+        previewText += `涉及 <strong>${bookCount}</strong> 本书籍<br>`;
+        if (rangeSelect === 'important') {
+          previewText += `<span style="color: #ffc107;">⭐ 仅重点区块</span>`;
+        } else if (importantCount > 0) {
+          previewText += `其中 <strong>${importantCount}</strong> 个重点区块`;
+        }
+        
+        document.getElementById('ankiPreviewText').innerHTML = previewText;
+        document.getElementById('ankiPreview').style.display = 'block';
+      },
+
+      getAnkiExportBlocks() {
+        const bookSelect = document.getElementById('ankiBookSelect').value;
+        const rangeSelect = document.getElementById('ankiRangeSelect').value;
+        
+        let books = [];
+        
+        // 选择书籍
+        if (bookSelect === 'current') {
+          const currentBook = this.data.books.find(b => b.id === this.data.currentBookId);
+          if (currentBook) {
+            books = [currentBook];
+          }
+        } else {
+          books = this.data.books;
+        }
+        
+        // 收集区块
+        const blocks = [];
+        books.forEach(book => {
+          book.blocks.forEach((block, index) => {
+            // 根据范围过滤
+            if (rangeSelect === 'important' && !block.important) {
+              return;
+            }
+            
+            const lines = book.content.split('\n');
+            const content = lines.slice(block.startLine, block.endLine + 1).join('\n');
+            
+            blocks.push({
+              bookId: book.id,
+              bookName: book.name,
+              blockId: block.id,
+              blockIndex: index + 1,
+              content: content,
+              studyCount: block.studyRecords?.length || 0,
+              important: block.important || false,
+              format: book.format
+            });
+          });
+        });
+        
+        return blocks;
+      },
+
+      exportAnkiCards() {
+        const blocks = this.getAnkiExportBlocks();
+        
+        if (blocks.length === 0) {
+          alert('❌ 没有可导出的学习区块');
+          return;
+        }
+        
+        const cardType = document.getElementById('ankiCardType').value;
+        const includeTags = document.getElementById('ankiIncludeTags').checked;
+        
+        let ankiText = '';
+        
+        if (cardType === 'basic') {
+          // 基础卡片格式：正面\t背面\t标签
+          blocks.forEach(block => {
+            // 获取第一行作为标题
+            const cleanContent = this.stripHtmlAndMarkdown(block.content);
+            const firstLine = cleanContent.split('\n')[0].trim();
+            const title = firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
+            
+            const front = `${block.bookName} - ${title}`;
+            
+            // 背面是完整内容（如果内容多行，从第二行开始；如果只有一行，就显示完整内容）
+            let back = cleanContent;
+            
+            // 处理多行内容，使用<br>连接
+            back = back.replace(/\n/g, '<br>');
+            
+            let tags = '';
+            if (includeTags) {
+              tags = `${this.sanitizeAnkiTag(block.bookName)} 学习${block.studyCount}次`;
+              if (block.important) {
+                tags += ' 重点';
+              }
+            }
+            
+            ankiText += `${front}\t${back}`;
+            if (tags) {
+              ankiText += `\t${tags}`;
+            }
+            ankiText += '\n';
+          });
+        } else {
+          // 填空卡片格式：内容（需要手动标记{{c1::}}）\t标签
+          blocks.forEach(block => {
+            let content = this.stripHtmlAndMarkdown(block.content);
+            content = content.replace(/\n/g, '<br>');
+            
+            // 添加注释提示用户标记填空
+            content = `<!-- ${block.bookName} - 区块${block.blockIndex} --><br>${content}`;
+            
+            let tags = '';
+            if (includeTags) {
+              tags = `${this.sanitizeAnkiTag(block.bookName)} 学习${block.studyCount}次`;
+              if (block.important) {
+                tags += ' 重点';
+              }
+            }
+            
+            ankiText += content;
+            if (tags) {
+              ankiText += `\t${tags}`;
+            }
+            ankiText += '\n';
+          });
+        }
+        
+        // 下载文件
+        const blob = new Blob([ankiText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+        const cardTypeStr = cardType === 'basic' ? '基础' : '填空';
+        a.download = `Anki卡片_${cardTypeStr}_${dateStr}.txt`;
+        
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        alert(`✅ Anki卡片已生成！\n\n共导出 ${blocks.length} 张卡片\n\n导入步骤：\n1. 在Anki中选择"文件→导入"\n2. 选择刚下载的txt文件\n3. 字段分隔符选择"制表符"\n4. 完成导入`);
+        
+        this.hideAnkiExportModal();
+      },
+
+      stripHtmlAndMarkdown(text) {
+        // 移除HTML标签
+        let result = text.replace(/<[^>]*>/g, '');
+        
+        // 如果是markdown，简单转换一些格式
+        result = result.replace(/^#+\s+/gm, ''); // 移除标题标记
+        result = result.replace(/\*\*(.+?)\*\*/g, '$1'); // 移除粗体
+        result = result.replace(/\*(.+?)\*/g, '$1'); // 移除斜体
+        result = result.replace(/`(.+?)`/g, '$1'); // 移除行内代码
+        
+        return result.trim();
+      },
+
+      sanitizeAnkiTag(tag) {
+        // Anki标签不能包含空格和特殊字符
+        return tag.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '_');
+      },
+
+      // ========== 移动端功能 ==========
+      toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('show');
+      },
+
+      toggleTaskPanel() {
+        document.getElementById('taskPanel').classList.toggle('show');
+      },
+
+      // ========== 工具函数 ==========
+      escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+    };
+
+    // 初始化应用
+    window.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
+
+    // 点击模态框外部关闭
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>
